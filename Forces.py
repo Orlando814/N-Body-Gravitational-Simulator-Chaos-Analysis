@@ -8,7 +8,7 @@ def newtonian_gravity(r: np.ndarray, mass: np.ndarray) -> np.ndarray:
     numerator = G * mass
     denominator = dist ** 2
     """ Dimensions are extended from (N, N) to (N, N, 1) which will result in [[[a], [b], [c]], ...]]] which will be
-        multiplied by [[[x, y, z]], ...]]] to result in [[[ax, ay, az], [b.., b.., b..]. ..]]]. This will repeat for 
+        multiplied by [[[x, y, z]], ...]]] to result in [[[ax, ay, az], [b.., b.., b..]. ..]]]. This will repeat for
         every row of both uv_coef and unit_vector. The resulting array will be (N, N, 3)"""
     uv_coef = np.divide(numerator, denominator, out=np.zeros_like(numerator * denominator), where=denominator != 0)[
         :, :, np.newaxis]
