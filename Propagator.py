@@ -7,15 +7,16 @@ from Body import Body
 def rk4(r: np.ndarray, v: np.ndarray, mass: np.ndarray, func: Callable[[np.ndarray, np.ndarray], np.ndarray],
         dt: float):
     k1 = func(r, mass)
-    v1 = v + k1 * dt
+    v1 = v
 
     k2 = func(r + dt / 2 * v1, mass)
-    v2 = v + k2 * dt
+    v2 = v + k1 * dt / 2
 
     k3 = func(r + dt / 2 * v2, mass)
-    v3 = v + k3 * dt
+    v3 = v + k2 * dt / 2
 
     k4 = func(r + dt * v3, mass)
+    v4 = v + k3 * dt
 
     v = v + dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6
     r = r + dt * (v1 + 2 * v2 + 2 * v3 + v4) / 6

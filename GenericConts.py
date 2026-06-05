@@ -1,8 +1,9 @@
 from Body import Body
 import numpy as np
 
-G = 6.674 * 10 ** -11
-EARTH_MASS = 5.9722e24
+G = 6.674 * 10 ** -11 #  m^3 * kg^−1 * s^−2
+EARTH_MASS = 5.9722e24 # kg
+EARTH_ACCEL = -9.81 # m / s^2
 
 # This returns a unit vector representing the direction of the main_body to the other body
 def direc_of_body_to_other_body(r: np.ndarray) -> np.ndarray:
