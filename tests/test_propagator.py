@@ -1,5 +1,7 @@
 import pytest
 import numpy as np
+from numpy.ma.testutils import approx
+
 from Propagator import rk4
 from GenericConts import EARTH_ACCEL
 from Forces import newtonian_gravity
@@ -92,5 +94,8 @@ def test_propagator_errors():
     local_trunc_error_r2 = r2_error / r3_error
     local_trunc_error_v1 = v1_error / v2_error
     local_trunc_error_v2 = v2_error / v3_error
-    assert 0 == 1
+    assert local_trunc_error_r1 == pytest.approx(32, rel = 0.1)
+    assert local_trunc_error_r2 == pytest.approx(32, rel=0.1)
+    assert local_trunc_error_v1 == pytest.approx(32, rel=0.1)
+    assert local_trunc_error_v2 == pytest.approx(32, rel=0.1)
 

@@ -1,41 +1,50 @@
-import yaml
+from GenericConts import load_yaml
+import numpy as np
 
-def load_yaml(name: str) -> dict:
-    with open(name, 'r') as f:
-        return yaml.safe_load(f)
-
-body_config_path = "FigureEight.yaml"
+body_config_path = "ThreeBody.yaml"
 sim_config_path = "SimConfig.yaml"
 
 class Config:
     def __init__(self):
-        self.sim = SimConfig(load_yaml(body_config_path))
-        self.body = BodyConfig(load_yaml(sim_config_path))
+        self.sim = load_yaml(sim_config_path)
+        self.body = load_yaml(body_config_path)
 
 class SimConfig:
-    def __init__(self, sim_config: dict):
+    def __init__(self):
+        config = Config()
         self.state = {}
-        for key, value in sim_config.items():
+        for key, value in config.sim.items():
             self.state[key] = value
 
-        # try:
-        #     self.dt = simConfig["dt"]
-        #     self.numSteps = simConfig["numSteps"]
-        #     self.
-        # except KeyError as k:
-        #     print("SimConfig Class couldn't initialize due to incorrect / lack of key:", k)
 
 class BodyConfig:
-    def __init__(self, body_config: dict):
+    def __init__(self):
+        config = Config()
         self.state = {}
-        for key, value in body_config.items():
+        self.num_bodies = 0
+        for key, value in config.body.items():
             self.state[key] = value
-        # try:
-        #     self.x = bodyConfig["initial_position"]["x"]
-        #     self.y = bodyConfig["initial_position"]["y"]
-        #     self.z = bodyConfig["initial_position"]["z"]
-        #     self.vx = bodyConfig["initial_velocity"]["vx"]
-        #     self.vy = bodyConfig["initial_velocity"]["vy"]
-        #     self.vz = bodyConfig["initial_velocity"]["vz"]
-        # except KeyError as k:
-        #     print("BodyConfig Class couldn't initialize due to incorrect / lack of key:", k)
+            self.num_bodies += 1
+        self.state_array = self.state_array()
+        self.mass = self.mass()
+        self.radius = self.radius()
+
+    def state_array(self) -> np.ndarray:
+        state_array = np.zeros((self.num_bodies, 2,  3))
+        count = 0
+        for key, value in self.state.items():
+            state_array[count] = np.array([np.array(value["r"]), np.array(value["v"])])
+            count += 1
+        return state_array
+
+    def mass(self) -> np.ndarray:
+        mass = np.array([])
+        for key, value in self.state.items():
+            mass = np.append(mass, value["mass"])
+        return mass
+
+    def radius(self) -> np.ndarray:
+        radius = np.array([])
+        for key, value in self.state.items():
+            radius = np.append(radius, value["radius"])
+        return radius

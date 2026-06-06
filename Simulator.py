@@ -2,35 +2,41 @@ from Config.ConfigClass import SimConfig
 from Body import Body
 from typing import Callable
 import numpy as np
+from Propagator import rk4
+from Forces import newtonian_gravity
+from Config.ConfigClass import SimConfig, BodyConfig
 
 class Simulator:
-    def __init__(self, sim_config: SimConfig, r: np.ndarray, v: np.ndarray, radius: np.ndarray, mass: np.ndarray) -> None:
+    def __init__(self, sim_config: SimConfig, state: np.ndarray, mass: np.ndarray, radius: np.ndarray) -> None:
         try:
             self.dt = sim_config.state["dt"]
-            self.num_steps = sim_config.state["num_steps"]
-            self.r = r
-            self.v = v
+            self.duration = sim_config.state["duration"]
+            self.state = state
             self.radius = radius
             self.mass = mass
-            self.num_bodies = r.size
+            self.num_bodies = np.size(state, axis = 0)
+            self.history = np.zeros((self.num_steps + 1, self.num_bodies, 2, 3))
         except KeyError as k:
             print("Initialization of Simulator class went wrong", k)
 
     @property
-    def history(self) -> dict:
-        history = {}
-        for index in range(self.num_bodies):
-            history["body" + str(index + 1)] = {"r": np.zeros(self.num_steps), "v": np.zeros(self.num_steps)}
-        return history
+    def num_steps(self) -> int:
+        return int(self.duration / self.dt)
 
-    @property
-    def duration(self) -> float:
-        return self.dt * self.num_steps
-
-    def simulate(self, step_func: Callable[[Body, Body, Callable[[np.ndarray, np.ndarray], np.ndarray]], None]) -> None: # probably needs a state as well
-        current_time = 0
+    def simulate(self) -> None:
+        v = self.state[:, 1]
+        r = self.state[:, 0]
+        self.history[0] = self.state
         for step in range(self.num_steps):
+            r_step, v_step = rk4(r, v, self.mass, newtonian_gravity, self.dt)
+            self.state[:, 1] = v_step
+            self.state[:, 0] = r_step
+            self.history[step + 1] = self.state
 
-
-
-            current_time += self.dt
+state = BodyConfig().state_array
+mass = BodyConfig().mass
+radius = BodyConfig().radius
+sim = SimConfig()
+simulator = Simulator(sim, state, mass, radius)
+simulator.simulate()
+history = simulator.history

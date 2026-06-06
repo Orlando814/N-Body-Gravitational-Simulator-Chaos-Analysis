@@ -1,5 +1,6 @@
 import numpy as np
 from GenericConts import G, direc_of_body_to_other_body, dist_of_all_bodies
+from Config.ConfigClass import BodyConfig
 
 
 def newtonian_gravity(r: np.ndarray, mass: np.ndarray) -> np.ndarray:

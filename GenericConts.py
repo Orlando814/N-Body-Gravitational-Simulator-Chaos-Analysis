@@ -1,5 +1,8 @@
-from Body import Body
+import yaml
 import numpy as np
+from pathlib import Path
+
+
 
 G = 6.674 * 10 ** -11 #  m^3 * kg^−1 * s^−2
 EARTH_MASS = 5.9722e24 # kg
@@ -17,3 +20,8 @@ def dist_of_all_bodies(r: np.ndarray) -> np.ndarray:
     r_broadcast = r[:, np.newaxis]
     dist_vec = r - r_broadcast
     return np.linalg.norm(dist_vec, axis = 2)
+
+def load_yaml(name: str) -> dict:
+    directory_name = Path(__file__).resolve().parent / "Config" / "InitialConsts" / name
+    with open(directory_name, 'r') as f:
+        return yaml.safe_load(f)
