@@ -1,6 +1,3 @@
-from Config.ConfigClass import SimConfig
-from Body import Body
-from typing import Callable
 import numpy as np
 from Propagator import rk4
 from Forces import newtonian_gravity
@@ -32,11 +29,3 @@ class Simulator:
             self.state[:, 1] = v_step
             self.state[:, 0] = r_step
             self.history[step + 1] = self.state
-
-state = BodyConfig().state_array
-mass = BodyConfig().mass
-radius = BodyConfig().radius
-sim = SimConfig()
-simulator = Simulator(sim, state, mass, radius)
-simulator.simulate()
-history = simulator.history

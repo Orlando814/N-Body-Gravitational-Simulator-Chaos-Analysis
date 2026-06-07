@@ -1,7 +1,7 @@
 from GenericConts import load_yaml
 import numpy as np
 
-body_config_path = "ThreeBody.yaml"
+body_config_path = "three_bodies.yaml"
 sim_config_path = "SimConfig.yaml"
 
 class Config:
@@ -18,8 +18,8 @@ class SimConfig:
 
 
 class BodyConfig:
-    def __init__(self):
-        config = Config()
+    def __init__(self, config: Config):
+        config = config
         self.state = {}
         self.num_bodies = 0
         for key, value in config.body.items():

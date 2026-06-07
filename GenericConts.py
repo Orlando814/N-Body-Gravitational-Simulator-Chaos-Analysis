@@ -1,6 +1,7 @@
 import yaml
 import numpy as np
 from pathlib import Path
+import os
 
 
 
@@ -25,3 +26,11 @@ def load_yaml(name: str) -> dict:
     directory_name = Path(__file__).resolve().parent / "Config" / "InitialConsts" / name
     with open(directory_name, 'r') as f:
         return yaml.safe_load(f)
+
+def config_names() -> list[str]:
+    files = []
+    for file in os.listdir(Path(__file__).resolve().parent / "Config" / "InitialConsts"):
+        file_name = os.path.basename(file).split('/')[-1]
+        if file_name[-2:] != "py" and file_name != "SimConfig.yaml":
+            files.append(file_name[:-5])
+    return files
