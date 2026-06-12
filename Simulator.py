@@ -1,5 +1,5 @@
 import numpy as np
-from Propagator import rk4
+from Propagator import rk4, leapfrog
 from Forces import newtonian_gravity
 from Config.ConfigClass import SimConfig, BodyConfig
 
@@ -25,7 +25,7 @@ class Simulator:
         r = self.state[:, 0]
         self.history[0] = self.state
         for step in range(self.num_steps):
-            r_step, v_step = rk4(r, v, self.mass, newtonian_gravity, self.dt)
+            r_step, v_step = leapfrog(r, v, self.mass, newtonian_gravity, self.dt)
             self.state[:, 1] = v_step
             self.state[:, 0] = r_step
             self.history[step + 1] = self.state

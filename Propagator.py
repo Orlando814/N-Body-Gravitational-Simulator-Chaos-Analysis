@@ -21,3 +21,11 @@ def rk4(r: np.ndarray, v: np.ndarray, mass: np.ndarray, func: Callable[[np.ndarr
     v = v + dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6
     r = r + dt * (v1 + 2 * v2 + 2 * v3 + v4) / 6
     return r, v
+
+def leapfrog(r: np.ndarray, v: np.ndarray, mass: np.ndarray, func: Callable[[np.ndarray, np.ndarray], np.ndarray],
+        dt: float):
+    a = func(r, mass)
+    x_new = r + v * dt + 0.5 * a * dt ** 2
+    v_new = v + 0.5 * (a + func(x_new, mass)) * dt
+
+    return x_new, v_new
