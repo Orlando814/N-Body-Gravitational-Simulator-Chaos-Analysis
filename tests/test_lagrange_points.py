@@ -15,7 +15,7 @@ def setup():
     y = np.linspace(-20, 20, 1000)
     x_mesh, y_mesh = np.meshgrid(x, y)
     points = np.array([x_mesh, y_mesh, np.zeros_like(x_mesh)])
-    gradient = two_body_potential_gradient(points, r1, r2, m1, m2, omega)
+    gradient = two_body_potential_gradient_rot(points, r1, r2, m1, m2, omega)
     return r1, r2, m1, m2, omega, gradient, x_mesh, y_mesh
 
 def test_potential_gradient(setup):
@@ -25,7 +25,7 @@ def test_potential_gradient(setup):
     plt.contourf(x_mesh, y_mesh, gradient_mag_clip, levels = 20)
 
     def grad_xy(p):  # wrap your gradient for a single (x,y) point, z=0
-        g = two_body_potential_gradient(np.array([p[0], p[1], 0.0]), r1, r2, m1, m2, omega)
+        g = two_body_potential_gradient_rot(np.array([p[0], p[1], 0.0]), r1, r2, m1, m2, omega)
         return [g[0], g[1]]  # want both components = 0
 
     guesses = [(-5, 0), (5, 0), (-15, 0), (-5, 8.66), (-5, -8.66)]  # eyeball from your contour
