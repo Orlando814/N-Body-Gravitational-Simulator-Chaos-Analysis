@@ -2,25 +2,45 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import brentq
 
-def two_body_potential_gradient_rot(r: np.ndarray, b1_pos: np.ndarray, b2_pos: np.ndarray,
-                                    m1: float, m2: float, omega: float, g: float) -> np.ndarray:
-    body1_deriv = g * -1 / 2 * m1 * ((r[0] - b1_pos[0]) ** 2 + (r[1] - b1_pos[1]) ** 2 + (r[2] - b1_pos[2]) ** 2) ** (
-            -3 / 2)
-    body2_deriv = g * -1 / 2 * m2 * ((r[0] - b2_pos[0]) ** 2 + (r[1] - b2_pos[1]) ** 2 + (r[2] - b2_pos[2]) ** 2) ** (
-            -3 / 2)
-    du_dx = -body1_deriv * 2 * (r[0] - b1_pos[0]) - body2_deriv * 2 * (r[0] - b2_pos[0]) - omega ** 2 * r[0]
-    du_dy = -body1_deriv * 2 * (r[1] - b1_pos[1]) - body2_deriv * 2 * (r[1] - b2_pos[1]) - omega ** 2 * r[1]
-    du_dz = -body1_deriv * 2 * (r[2] - b1_pos[2]) - body2_deriv * 2 * (r[2] - b2_pos[2])
+def two_body_potential_gradient_rot(r: np.ndarray, pos: np.ndarray, mass: np.ndarray,
+                                    omega: float, g: float) -> np.ndarray:
+# def two_body_potential_gradient_rot(r: np.ndarray, b1_pos, b2_pos, m1, m2,
+#                                     omega: float, g: float) -> np.ndarray:
+    coef = g * -1 / 2 * mass
 
-    return np.array([du_dx, du_dy, du_dz])
+    deriv = -((r[0] - pos[:, 0]) ** 2 + (r[1] - pos[:, 1]) ** 2 + (r[2] - pos[:, 2]) ** 2) ** (-3 / 2)
 
-def two_body_potential_rot(r: np.ndarray, b1_pos: np.ndarray, b2_pos: np.ndarray,
-                           m1: float, m2: float, omega: float, g: float) -> float:
-    body1_pot = g * m1 * ((r[0] - b1_pos[0]) ** 2 + (r[1] - b1_pos[1]) ** 2 + (r[2] - b1_pos[2]) ** 2) ** (-1 / 2)
-    body2_pot = g * m2 * ((r[0] - b2_pos[0]) ** 2 + (r[1] - b2_pos[1]) ** 2 + (r[2] - b2_pos[2]) ** 2) ** (-1 / 2)
+    du_dx = -coef * deriv * 2 * (r[0] - pos[:, 0]) - omega ** 2 * r[0]
+    du_dy = -coef * deriv * 2 * (r[1] - pos[:, 1]) - omega ** 2 * r[1]
+    du_dz = -coef * deriv * 2 * (r[2] - pos[:, 2])
+
+    # body1_deriv = g * -1 / 2 * m1 * ((r[0] - b1_pos[0]) ** 2 + (r[1] - b1_pos[1]) ** 2 + (r[2] - b1_pos[2]) ** 2) ** (
+    #         -3 / 2)
+    # body2_deriv = g * -1 / 2 * m2 * ((r[0] - b2_pos[0]) ** 2 + (r[1] - b2_pos[1]) ** 2 + (r[2] - b2_pos[2]) ** 2) ** (
+    #         -3 / 2)
+    # du_dx = -body1_deriv * 2 * (r[0] - b1_pos[0]) - body2_deriv * 2 * (r[0] - b2_pos[0]) - omega ** 2 * r[0]
+    # du_dy = -body1_deriv * 2 * (r[1] - b1_pos[1]) - body2_deriv * 2 * (r[1] - b2_pos[1]) - omega ** 2 * r[1]
+    # du_dz = -body1_deriv * 2 * (r[2] - b1_pos[2]) - body2_deriv * 2 * (r[2] - b2_pos[2])
+
+    return np.array([np.sum(du_dx, axis = 0), np.sum(du_dy, axis = 0), np.sum(du_dz, axis = 0)])
+    # return np.array([du_dx, du_dy, du_dz])
+
+def two_body_potential_rot(r: np.ndarray, pos: np.ndarray, mass: np.ndarray, omega: float, g: float) -> float:
+# def two_body_potential_rot(r: np.ndarray, b1_pos, b2_pos, m1, m2,
+#                                     omega: float, g: float) -> np.ndarray:
+
+    coef = g * mass
+
+    grav_potential = coef * ((r[0] - pos[:, 0]) ** 2 + (r[1] - pos[:, 1]) ** 2 + (r[2] - pos[:, 2]) ** 2) ** (-1 / 2)
+
     centrifugal = 1 / 2 * omega ** 2 * (r[0] ** 2 + r[1] ** 2)
-    potential = -body1_pot - body2_pot - centrifugal
-    return potential
+
+    # body1_pot = g * m1 * ((r[0] - b1_pos[0]) ** 2 + (r[1] - b1_pos[1]) ** 2 + (r[2] - b1_pos[2]) ** 2) ** (-1 / 2)
+    # body2_pot = g * m2 * ((r[0] - b2_pos[0]) ** 2 + (r[1] - b2_pos[1]) ** 2 + (r[2] - b2_pos[2]) ** 2) ** (-1 / 2)
+    # centrifugal = 1 / 2 * omega ** 2 * (r[0] ** 2 + r[1] ** 2)
+    # potential = -body1_pot - body2_pot - centrifugal
+    # return potential
+    return np.sum(-grav_potential, axis = 0) - centrifugal
 
 def angular_velocity(r: float, m1: float, m2: float, g: float) -> float:
     num = g * (m1 + m2)
@@ -89,6 +109,18 @@ r2 = np.array([-m1 / (m1 + m2) * dist_between_bodies, 0.0, 0.0])
 omega = angular_velocity(dist_between_bodies, m1, m2, g)
 x = np.linspace(-15, 15, 1000)
 y = np.linspace(-15, 15, 1000)
+
+# generalized version works for gradient
+# o = two_body_potential_gradient_rot(np.array([0, 0, 0]), np.array([r1, r2]), np.array([m1, m2]), omega, g)
+# o = two_body_potential_gradient_rot(np.array([0, 0, 0]), r1, r2, m1, m2, omega, g)
+# 0,12.08790
+# 1,0.00000
+# 2,0.00000
+
+o = two_body_potential_rot(np.array([0, 0, 0]), np.array([r1, r2]), np.array([m1, m2]), omega, g)
+# o = two_body_potential_rot(np.array([0, 0, 0]), r1, r2, m1, m2, omega, g)
+# -11.109999999999998
+# -11.109999999999998
 
 x_mesh, y_mesh = np.meshgrid(x, y)
 points = np.array([x_mesh, y_mesh, np.zeros_like(x_mesh)])
