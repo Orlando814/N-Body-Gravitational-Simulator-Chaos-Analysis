@@ -5,14 +5,18 @@ from scipy.optimize import brentq
 def two_body_potential_gradient_rot(r: np.ndarray, pos: np.ndarray, mass: np.ndarray,
                                     omega: float, g: float) -> np.ndarray:
 # def two_body_potential_gradient_rot(r: np.ndarray, b1_pos, b2_pos, m1, m2,
-#                                     omega: float, g: float) -> np.ndarray:
+#                                      omega: float, g: float) -> np.ndarray:
     coef = g * -1 / 2 * mass
+    x = coef
+    w = pos[:, 0, np.newaxis]
+    y = r[0] - pos[:, 0, np.newaxis]
+    z = coef[:, np.newaxis] * (r[0] - pos[:, 0, np.newaxis])
 
-    deriv = -((r[0] - pos[:, 0]) ** 2 + (r[1] - pos[:, 1]) ** 2 + (r[2] - pos[:, 2]) ** 2) ** (-3 / 2)
+    deriv = coef[:, np.newaxis] * ((r[0] - pos[:, 0, np.newaxis]) ** 2 + (r[1] - pos[:, 1, np.newaxis]) ** 2 + (r[2] - pos[:, 2, np.newaxis]) ** 2) ** (-3 / 2)
 
-    du_dx = -coef * deriv * 2 * (r[0] - pos[:, 0]) - omega ** 2 * r[0]
-    du_dy = -coef * deriv * 2 * (r[1] - pos[:, 1]) - omega ** 2 * r[1]
-    du_dz = -coef * deriv * 2 * (r[2] - pos[:, 2])
+    du_dx = np.sum(-deriv * 2 * (r[0] - pos[:, 0, np.newaxis]), axis = 0) - omega ** 2 * r[0]
+    du_dy = np.sum(-deriv * 2 * (r[1] - pos[:, 1, np.newaxis]), axis = 0) - omega ** 2 * r[1]
+    du_dz = np.sum(-deriv * 2 * (r[2] - pos[:, 2, np.newaxis]), axis = 0)
 
     # body1_deriv = g * -1 / 2 * m1 * ((r[0] - b1_pos[0]) ** 2 + (r[1] - b1_pos[1]) ** 2 + (r[2] - b1_pos[2]) ** 2) ** (
     #         -3 / 2)
@@ -22,7 +26,7 @@ def two_body_potential_gradient_rot(r: np.ndarray, pos: np.ndarray, mass: np.nda
     # du_dy = -body1_deriv * 2 * (r[1] - b1_pos[1]) - body2_deriv * 2 * (r[1] - b2_pos[1]) - omega ** 2 * r[1]
     # du_dz = -body1_deriv * 2 * (r[2] - b1_pos[2]) - body2_deriv * 2 * (r[2] - b2_pos[2])
 
-    return np.array([np.sum(du_dx, axis = 0), np.sum(du_dy, axis = 0), np.sum(du_dz, axis = 0)])
+    return np.array([du_dx, du_dy, du_dz])
     # return np.array([du_dx, du_dy, du_dz])
 
 def two_body_potential_rot(r: np.ndarray, pos: np.ndarray, mass: np.ndarray, omega: float, g: float) -> float:
@@ -31,7 +35,7 @@ def two_body_potential_rot(r: np.ndarray, pos: np.ndarray, mass: np.ndarray, ome
 
     coef = g * mass
 
-    grav_potential = coef * ((r[0] - pos[:, 0]) ** 2 + (r[1] - pos[:, 1]) ** 2 + (r[2] - pos[:, 2]) ** 2) ** (-1 / 2)
+    grav_potential = coef[:, np.newaxis] * ((r[0] - pos[:, 0, np.newaxis]) ** 2 + (r[1] - pos[:, 1, np.newaxis]) ** 2 + (r[2] - pos[:, 2, np.newaxis]) ** 2) ** (-1 / 2)
 
     centrifugal = 1 / 2 * omega ** 2 * (r[0] ** 2 + r[1] ** 2)
 
@@ -61,13 +65,18 @@ def find_lagrange_123(gradient_func, b1_pos: np.ndarray, b2_pos: np.ndarray, m1:
     grid = np.arange(-dist_bet_bodies * 10, dist_bet_bodies * 10, dist_bet_bodies / 300)
 
     # Couple of vars to store information through the loo
-    old_grad = gradient_func(np.array([grid[0], 0, 0]), b1_pos, b2_pos, m1, m2, omega, g)[0]
+    # old_grad = gradient_func(np.array([grid[0], 0, 0]), np.array([b1_pos, b2_pos]), np.array([m1, m2]), omega, g)[0]
     old_step = 0
     count = 0
     mass_ratio_b1 = m1 / (m1 + m2)
     mass_ratio_b2 = m2 / (m1 + m2)
+    p1 = gradient_func(np.array([grid, grid, grid]), np.array([b1_pos, b2_pos]), np.array([m1, m2]), omega, g)
+    x = p1[:-1]
+    y = p1[1:]
+    z = x - y
+
     for step in grid:
-        new_grad = gradient_func(np.array([step, 0, 0]), b1_pos, b2_pos, m1, m2, omega, g)[0]
+        new_grad = gradient_func(np.array([step, 0, 0]), np.array([b1_pos, b2_pos]), np.array([m1, m2]), omega, g)[0]
 
         # First check if there has been a sign flip between current grad and previus one. This means that between these
         # two x values there is a potential lagrange point. Also exclude step = 0 as are starting at step = 1
@@ -88,7 +97,7 @@ def find_lagrange_123(gradient_func, b1_pos: np.ndarray, b2_pos: np.ndarray, m1:
     # dummy function to use in the brentq since brentq can only pass a single value. We also return only the x value of
     # the gradient becuase we already know at a lagrange point y, z = 0 so we just have to solve where x = 0
     def f(x):
-        return gradient_func(np.array([x, 0, 0]), b1_pos, b2_pos, m1, m2, omega, g)[0]
+        return gradient_func(np.array([x, 0, 0]), np.array([b1_pos, b2_pos]), np.array([m1, m2]), omega, g)[0]
 
     # We're solving for three points so three iterations. The brentq basically takes a function and a left / right bound
     # These bounds need to be of the opposite sign as that means there is a 0 somewhere in between them. Then the brentq
@@ -117,14 +126,15 @@ y = np.linspace(-15, 15, 1000)
 # 1,0.00000
 # 2,0.00000
 
-o = two_body_potential_rot(np.array([0, 0, 0]), np.array([r1, r2]), np.array([m1, m2]), omega, g)
+# o = two_body_potential_rot(np.array([0, 0, 0]), np.array([r1, r2]), np.array([m1, m2]), omega, g)
 # o = two_body_potential_rot(np.array([0, 0, 0]), r1, r2, m1, m2, omega, g)
 # -11.109999999999998
 # -11.109999999999998
 
 x_mesh, y_mesh = np.meshgrid(x, y)
-points = np.array([x_mesh, y_mesh, np.zeros_like(x_mesh)])
-z_pot = two_body_potential_rot(points, r1, r2, m1, m2, omega, g)
+points = np.array([x_mesh.ravel(), y_mesh.ravel(), np.zeros_like(x_mesh).ravel()])
+z_pot = two_body_potential_rot(points, np.array([r1, r2]), np.array([m1, m2]), omega, g)
+z_pot = z_pot.reshape(x_mesh.shape)
 z_pot = np.clip(z_pot, np.percentile(z_pot, 1), None)
 
 fig = plt.figure(figsize = (14, 6))
