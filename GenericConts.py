@@ -3,8 +3,6 @@ import numpy as np
 from pathlib import Path
 import os
 
-
-
 G = 6.674 * 10 ** -11 #  m^3 * kg^−1 * s^−2
 EARTH_MASS = 5.9722e24 # kg
 EARTH_ACCEL = -9.81 # m / s^2
