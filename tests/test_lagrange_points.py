@@ -27,16 +27,3 @@ def test_potential_gradient(setup):
     def grad_xy(p):  # wrap your gradient for a single (x,y) point, z=0
         g = two_body_potential_gradient_rot(np.array([p[0], p[1], 0.0]), r1, r2, m1, m2, omega)
         return [g[0], g[1]]  # want both components = 0
-
-    guesses = [(-5, 0), (5, 0), (-15, 0), (-5, 8.66), (-5, -8.66)]  # eyeball from your contour
-    points = [fsolve(grad_xy, g) for g in guesses]
-    for p in points:
-        plt.scatter(p[0], p[1], color="red", s=40, marker="*")
-    # mask = gradient_mag < np.percentile(gradient_mag, 0.1)
-    # xlp = x_mesh[mask]
-    # ylp = y_mesh[mask]
-    # plt.scatter(xlp, ylp, color="red", s=10)
-    plt.xlabel("X Axis")
-    plt.ylabel("Y Axis")
-    plt.show()
-
